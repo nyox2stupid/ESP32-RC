@@ -1,0 +1,38 @@
+#include <ESP32Servo.h>
+#include "BluetoothSerial.h"
+
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
+
+BluetoothSerial SerialBT;
+Servo myServo;
+int servoPin = 2;
+int centerPosition = 90;
+unsigned long lastInputTime = 0;
+unsigned long timeout = 2000; // 2 seconds
+
+void setup() {
+  Serial.begin(115200);
+  SerialBT.begin("ESP32 Servo"); // Bluetooth device name
+  Serial.println("The device started, now you can pair it with Bluetooth!");
+
+  myServo.attach(servoPin);
+  myServo.write(centerPosition); // Initialize servo to center position
+}
+
+void loop() {
+  if (SerialBT.available()) {
+    String input = SerialBT.readStringUntil('\n');
+    int angle = input.toInt();
+    if (angle >= 0 && angle <= 180) {
+      myServo.write(angle);
+      lastInputTime = millis();
+    }
+  }
+
+  if (millis() - lastInputTime > timeout) {
+    myServo.write(centerPosition);
+  }
+  delay(1);
+}
