@@ -42,7 +42,7 @@ def select_keys(screen):
 def initialize_joystick():
     joystick = None
     if pygame.joystick.get_count() > 0:
-        joystick = pygame.joystick.Joystick(0)
+        joystick = pygame.joystick
         joystick.init()
     return joystick
 
@@ -70,7 +70,8 @@ def update_screen(screen, joystick, selected_keys, ser):
         steering_value = 1
 
     angle = int((steering_value * -1 + 1) * 90)
-    ser.write(f"{angle}\n".encode())
+    if ser != None:
+        ser.write(f"{angle}\n".encode())
 
     screen.fill((0, 0, 0))
 
@@ -97,7 +98,12 @@ def main():
     axnum = joystick.get_numaxes() if joystick else 0
     screen = pygame.display.set_mode((400, 225 * (axnum + 1)))
     pygame.display.set_caption('Steering Wheel Input')
-    ser = serial.Serial('/dev/ttyUSB0', 115200)  # Change the port name as needed
+    try:
+        ser = serial.Serial('/dev/ttyUSB0', 115200)  # Change the port name as needed
+    except:
+        print("Could not open serial port")
+        ser = None
+
 
     try:
         while True:
